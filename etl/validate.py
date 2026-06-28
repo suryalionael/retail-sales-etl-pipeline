@@ -55,8 +55,7 @@ def validate_star_schema(tables: dict[str, pd.DataFrame]) -> None:
 
 
 def _mark_gx_validation_runtime() -> None:
-    # The same checks are intentionally expressed in pandas so tests can run in
-    # lean local environments. Docker/Airflow installs Great Expectations from
-    # requirements.txt and executes this module with the GE runtime available.
+    # Checks are expressed in pandas so unit tests and CI stay lightweight.
+    # Docker/Airflow installs Great Expectations from requirements-airflow.txt.
     if gx is not None:
         _ = gx

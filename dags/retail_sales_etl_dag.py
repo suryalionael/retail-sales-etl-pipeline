@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from pathlib import Path
 
+import pandas as pd
 import pendulum
 from airflow.decorators import dag, task
 from etl.config import database_url, load_config
@@ -77,27 +78,25 @@ def retail_sales_etl():
     @task(task_id="load")
     def load(table_paths: dict[str, str]) -> dict[str, str]:
         config = load_config()
-        tables = {
-            name: __import__("pandas").read_parquet(path) for name, path in table_paths.items()
-        }
+        tables = {name: pd.read_parquet(path) for name, path in table_paths.items()}
         engine = get_engine(database_url())
         run_ddl(engine)
         load_star_schema(engine, tables, config["warehouse"]["batch_size"])
-        update_incremental_state(
-            tables["fact_sales_stage"], config["paths"]["incremental_state_file"]
-        )
         return table_paths
 
     @task(task_id="quality_check")
-    def quality_check() -> None:
+    def quality_check(table_paths: dict[str, str]) -> None:
         engine = get_engine(database_url())
         run_warehouse_quality_checks(engine)
+        config = load_config()
+        fact = pd.read_parquet(table_paths["fact_sales_stage"])
+        update_incremental_state(fact, config["paths"]["incremental_state_file"])
 
     source = extract()
     validated = validate(source)
     transformed = transform(validated)
     loaded = load(transformed)
-    quality_check().set_upstream(loaded)
+    quality_check(loaded)
 
 
 retail_sales_etl()
