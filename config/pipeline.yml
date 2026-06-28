@@ -1,0 +1,28 @@
+dataset:
+  name: "UCI Online Retail"
+  url: "${DATASET_URL}"
+  archive_path: "${DATASET_FILE}"
+  extract_dir: "${RAW_EXTRACT_DIR}"
+  source_file_pattern: "*.xlsx"
+  source_license: "CC BY 4.0"
+  source_page: "https://archive.ics.uci.edu/dataset/352/online+retail"
+
+paths:
+  processed_dir: "${PROCESSED_DIR}"
+  incremental_state_file: "${INCREMENTAL_STATE_FILE}"
+
+warehouse:
+  schema: "public"
+  batch_size: 5000
+
+quality:
+  min_sale_amount: 0
+  required_columns:
+    - InvoiceNo
+    - StockCode
+    - Description
+    - Quantity
+    - InvoiceDate
+    - UnitPrice
+    - CustomerID
+    - Country
